@@ -15,7 +15,6 @@ current_sensors.json
 errors.log
 
 # Legacy/superseded files
-SyncWMI.ps1
 sensors.mof
 sensors_std.mof
 bin/
