@@ -51,6 +51,7 @@ public static class Program
                         ctx.Configuration.GetSection(SensorMappingOptions.SectionName));
                     services.AddSingleton<ITelemetrySampleProvider, TelemetrySampleProvider>();
                     services.AddSingleton<WmiWriter>();
+                    services.AddHostedService<HardwareWorker>();
                     services.AddGrpc();
                 });
 

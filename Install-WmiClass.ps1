@@ -85,6 +85,12 @@ if ($classExists -and -not $Force) {
     $class.Properties.Add("CpuTemp",    [System.Management.CimType]::Real64, $false)
     $class.Properties.Add("SystemTemp", [System.Management.CimType]::Real64, $false)
     $class.Properties.Add("VrmTemp",    [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu0Temp",    [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu0PowerW",  [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu0CoreMhz", [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu0MemMhz",  [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu1Temp",    [System.Management.CimType]::Real64, $false)
+    $class.Properties.Add("Gpu1PowerW",  [System.Management.CimType]::Real64, $false)
     $class.Properties.Add("NvmeTemp",   [System.Management.CimType]::Real64, $false)
 
     # Voltages (V)

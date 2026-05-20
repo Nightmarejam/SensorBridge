@@ -25,9 +25,9 @@ message TelemetrySnapshot {
   ThermalTelemetry thermals = 11;
   FanTelemetry fans = 12;
   VoltageTelemetry voltages = 13;
-  StorageTelemetry storage = 14;
-  // Reserved for future GPU / memory / workload metrics without breaking clients.
-  reserved 20 to 29;
+  StorageTelemetry storage = 14;  // GPU telemetry (fields 20-21 used; 22-29 reserved for future expansion)
+  GpuTelemetry gpu0 = 20;
+  GpuTelemetry gpu1 = 21;
 }
 
 message CpuTelemetry {
@@ -54,4 +54,10 @@ message VoltageTelemetry {
 
 message StorageTelemetry {
   double nvme_temp_c = 1;
+}
+message GpuTelemetry {
+  double core_temp_c = 1;
+  double power_w     = 2;
+  double core_mhz    = 3;
+  double mem_mhz     = 4;
 }

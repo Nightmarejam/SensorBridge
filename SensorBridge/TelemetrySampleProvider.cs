@@ -6,6 +6,7 @@ using LibreHardwareMonitor.Hardware;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SensorBridge.Grpc;
+using GpuTelemetry = SensorBridge.Grpc.GpuTelemetry;
 
 namespace SensorBridge;
 
@@ -131,7 +132,9 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
             Thermals = new ThermalTelemetry(),
             Fans = new FanTelemetry(),
             Voltages = new VoltageTelemetry(),
-            Storage = new StorageTelemetry()
+            Storage = new StorageTelemetry(),
+            Gpu0 = new GpuTelemetry(),
+            Gpu1 = new GpuTelemetry()
         };
 
         if (_computer == null)
@@ -155,6 +158,12 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
                         break;
                     case SensorType.Voltage:
                         ApplyVoltage(sensor, val, snap);
+                        break;
+                    case SensorType.Power:
+                        ApplyGpuPower(hw, sensor, val, snap);
+                        break;
+                    case SensorType.Clock:
+                        ApplyGpuClock(hw, sensor, val, snap);
                         break;
                 }
             }
@@ -238,6 +247,20 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
                      name.Contains("VR MOS", StringComparison.OrdinalIgnoreCase) ||
                      name.Contains("MOS", StringComparison.OrdinalIgnoreCase))
                 snap.Thermals!.VrmTempC = PreferHigher(snap.Thermals.VrmTempC, val);
+            return;
+        }
+
+        if (hw.HardwareType == HardwareType.GpuNvidia ||
+            hw.HardwareType == HardwareType.GpuAmd ||
+            hw.HardwareType == HardwareType.GpuIntel)
+        {
+            var gpuIndex = GetGpuIndex(hw);
+            var target = gpuIndex == 0 ? snap.Gpu0 : snap.Gpu1;
+            if (target != null &&
+                (name.Contains("GPU Core", StringComparison.OrdinalIgnoreCase) ||
+                 name.Contains("GPU Temperature", StringComparison.OrdinalIgnoreCase) ||
+                 name.Contains("Core", StringComparison.OrdinalIgnoreCase)))
+                target.CoreTempC = PreferHigher(target.CoreTempC, val);
             return;
         }
 
@@ -332,7 +355,9 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
                 V5V = v?.v5 ?? 0,
                 V33V = v?.v3_3 ?? 0
             },
-            Storage = new StorageTelemetry { NvmeTempC = d.nvme_temp }
+            Storage = new StorageTelemetry { NvmeTempC = d.nvme_temp },
+            Gpu0 = new GpuTelemetry(),
+            Gpu1 = new GpuTelemetry()
         };
     }
 
@@ -345,7 +370,9 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
             Thermals = new ThermalTelemetry(),
             Fans = new FanTelemetry(),
             Voltages = new VoltageTelemetry(),
-            Storage = new StorageTelemetry()
+            Storage = new StorageTelemetry(),
+            Gpu0 = new GpuTelemetry(),
+            Gpu1 = new GpuTelemetry()
         };
 
     /// <summary>
@@ -414,7 +441,49 @@ public sealed class TelemetrySampleProvider : ITelemetrySampleProvider, IDisposa
             }
         }
     }
+
+    static void ApplyGpuPower(IHardware hw, ISensor sensor, double val, TelemetrySnapshot snap)
+    {
+        if (hw.HardwareType != HardwareType.GpuNvidia &&
+            hw.HardwareType != HardwareType.GpuAmd &&
+            hw.HardwareType != HardwareType.GpuIntel)
+            return;
+        var name = sensor.Name;
+        if (!name.Contains("GPU Package", StringComparison.OrdinalIgnoreCase) &&
+            !name.Contains("GPU Power", StringComparison.OrdinalIgnoreCase) &&
+            !name.Contains("Board Power", StringComparison.OrdinalIgnoreCase))
+            return;
+        var target = GetGpuIndex(hw) == 0 ? snap.Gpu0 : snap.Gpu1;
+        if (target != null) target.PowerW = val;
+    }
+
+    static void ApplyGpuClock(IHardware hw, ISensor sensor, double val, TelemetrySnapshot snap)
+    {
+        if (hw.HardwareType != HardwareType.GpuNvidia &&
+            hw.HardwareType != HardwareType.GpuAmd &&
+            hw.HardwareType != HardwareType.GpuIntel)
+            return;
+        var name = sensor.Name;
+        var target = GetGpuIndex(hw) == 0 ? snap.Gpu0 : snap.Gpu1;
+        if (target == null) return;
+        if (name.Contains("GPU Core", StringComparison.OrdinalIgnoreCase))
+            target.CoreMhz = val;
+        else if (name.Contains("GPU Memory", StringComparison.OrdinalIgnoreCase))
+            target.MemMhz = val;
+    }
+
+    static int GetGpuIndex(IHardware hw)
+    {
+        // LHM names GPUs as "NVIDIA GeForce RTX 3090", "NVIDIA GeForce GTX 1080 Ti" etc.
+        // Use identifier which contains /gpu/0, /gpu/1 etc.
+        var id = hw.Identifier.ToString();
+        if (id.Contains("/gpu/1", StringComparison.OrdinalIgnoreCase)) return 1;
+        return 0;
+    }
+
 }
+
+
 
 /// <summary>Matches LibreHardwareMonitor UI visitor: refresh hardware tree without visiting each sensor node.</summary>
 internal sealed class UpdateVisitor : IVisitor

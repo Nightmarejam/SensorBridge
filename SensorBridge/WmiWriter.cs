@@ -112,6 +112,20 @@ public sealed class WmiWriter : IDisposable
                 _instance["Fan6Rpm"] = snap.Fans.Fan6Rpm;
             }
 
+            // GPUs
+            if (snap.Gpu0 != null)
+            {
+                _instance["Gpu0Temp"]    = snap.Gpu0.CoreTempC;
+                _instance["Gpu0PowerW"]  = snap.Gpu0.PowerW;
+                _instance["Gpu0CoreMhz"] = snap.Gpu0.CoreMhz;
+                _instance["Gpu0MemMhz"]  = snap.Gpu0.MemMhz;
+            }
+            if (snap.Gpu1 != null)
+            {
+                _instance["Gpu1Temp"]    = snap.Gpu1.CoreTempC;
+                _instance["Gpu1PowerW"]  = snap.Gpu1.PowerW;
+            }
+
             _instance.Put();
         }
         catch (ManagementException ex) when (ex.ErrorCode == ManagementStatus.NotFound)
