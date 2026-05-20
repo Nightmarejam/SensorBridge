@@ -11,8 +11,12 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
-        var dumpSensors = args.Any(static a => string.Equals(a, "--dump-sensors", StringComparison.OrdinalIgnoreCase));
-        var hostArgs = args.Where(static a => !string.Equals(a, "--dump-sensors", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var dumpSensors = args.Any(static a =>
+            string.Equals(a, "--dump-sensors", StringComparison.OrdinalIgnoreCase));
+        var hostArgs = args
+            .Where(static a => !string.Equals(a, "--dump-sensors", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
         if (dumpSensors)
         {
             using var logFactory = LoggerFactory.Create(static b =>
@@ -23,14 +27,19 @@ public static class Program
         }
 
         var builder = Host.CreateDefaultBuilder(hostArgs)
-            .UseWindowsService()
+            .UseWindowsService(o => o.ServiceName = "SensorBridge")
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddSimpleConsole(o => o.SingleLine = true);
+            })
             .ConfigureWebHostDefaults(web =>
             {
                 web.ConfigureKestrel((_, options) =>
                 {
                     options.ListenAnyIP(9999, listen =>
                     {
-                        listen.Protocols = HttpProtocols.Http2;
+                        listen.Protocols = HttpProtocols.Http1AndHttp2;
                     });
                 });
 
@@ -41,6 +50,7 @@ public static class Program
                     services.Configure<SensorMappingOptions>(
                         ctx.Configuration.GetSection(SensorMappingOptions.SectionName));
                     services.AddSingleton<ITelemetrySampleProvider, TelemetrySampleProvider>();
+                    services.AddSingleton<WmiWriter>();
                     services.AddGrpc();
                 });
 

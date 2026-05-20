@@ -18,3 +18,13 @@ errors.log
 SyncWMI.ps1
 sensors.mof
 sensors_std.mof
+bin/
+obj/
+*.user
+*.suo
+
+SyncWMI.config.ps1
+SensorBridge/bin/
+SensorBridge/obj/
+logs/
+staging/

@@ -7,12 +7,17 @@ namespace SensorBridge;
 public sealed class TelemetryServiceImpl : TelemetryService.TelemetryServiceBase
 {
     private readonly ITelemetrySampleProvider _samples;
+    private readonly WmiWriter _wmi;
     private readonly ILogger<TelemetryServiceImpl> _logger;
 
-    public TelemetryServiceImpl(ITelemetrySampleProvider samples, ILogger<TelemetryServiceImpl> logger)
+    public TelemetryServiceImpl(
+        ITelemetrySampleProvider samples,
+        WmiWriter wmi,
+        ILogger<TelemetryServiceImpl> logger)
     {
         _samples = samples;
-        _logger = logger;
+        _wmi     = wmi;
+        _logger  = logger;
     }
 
     public override async Task StreamTelemetry(
@@ -27,7 +32,13 @@ public sealed class TelemetryServiceImpl : TelemetryService.TelemetryServiceBase
         {
             try
             {
-                var snapshot = await _samples.GetSnapshotAsync(context.CancellationToken).ConfigureAwait(false);
+                var snapshot = await _samples.GetSnapshotAsync(context.CancellationToken)
+                                             .ConfigureAwait(false);
+
+                // Write to WMI on every cycle regardless of whether a gRPC client
+                // is connected — this keeps LiveSensors populated for local software.
+                _wmi.Write(snapshot);
+
                 await responseStream.WriteAsync(snapshot).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
@@ -41,7 +52,8 @@ public sealed class TelemetryServiceImpl : TelemetryService.TelemetryServiceBase
 
             try
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(intervalMs), context.CancellationToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(intervalMs),
+                                 context.CancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
             {
