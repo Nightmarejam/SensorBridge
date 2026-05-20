@@ -1,0 +1,2 @@
+# Shell scripts for Linux (Gen8): CRLF breaks shebang (env: 'sh\r': No such file or directory)
+scripts/gen8_smoke_client/*.sh text eol=lf

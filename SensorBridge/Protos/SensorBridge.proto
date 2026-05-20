@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option csharp_namespace = "SensorBridge.Grpc";
+
+package faithh.sensorbridge.v1;
+
+// Preamp (client) opens a stream; Power Amp (server) pushes telemetry snapshots at a fixed interval.
+
+service TelemetryService {
+  // Server streams periodic hardware telemetry. Client may send empty keepalive messages if extended later.
+  rpc StreamTelemetry(StreamTelemetryRequest) returns (stream TelemetrySnapshot);
+}
+
+message StreamTelemetryRequest {
+  // Milliseconds between snapshots; server may clamp to supported bounds.
+  uint32 sample_interval_ms = 1;
+}
+
+message TelemetrySnapshot {
+  // Monotonic or wall-clock tick for ordering (e.g. Stopwatch.GetTimestamp() or Unix ms).
+  int64 source_timestamp_ticks = 1;
+  string board_device_id = 2;
+
+  CpuTelemetry cpu = 10;
+  ThermalTelemetry thermals = 11;
+  FanTelemetry fans = 12;
+  VoltageTelemetry voltages = 13;
+  StorageTelemetry storage = 14;
+  // Reserved for future GPU / memory / workload metrics without breaking clients.
+  reserved 20 to 29;
+}
+
+message CpuTelemetry {
+  double package_temp_c = 1;
+}
+
+message ThermalTelemetry {
+  double system_temp_c = 1;
+  double vrm_temp_c = 2;
+}
+
+message FanTelemetry {
+  double fan2_rpm = 1;
+  double fan5_rpm = 2;
+  double fan6_rpm = 3;
+}
+
+message VoltageTelemetry {
+  double vcore_v = 1;
+  double v12_v = 2;
+  double v5_v = 3;
+  double v3_3_v = 4;
+}
+
+message StorageTelemetry {
+  double nvme_temp_c = 1;
+}

@@ -1,0 +1,6 @@
+# Generated on Gen8 (or locally) - do not commitSensorBridge_pb2.py
+SensorBridge_pb2_grpc.py
+SensorBridge_pb2.pyi
+__pycache__/
+*.pyc
+.pytest_cache/

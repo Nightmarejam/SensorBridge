@@ -1,0 +1,70 @@
+FAITHH Gen8 smoke client - first run on Linux (servicebox)
+
+LAN: FAITHH uses 192.158.1.0/24 (fixed hosts):
+   faithh (main): 192.158.1.25
+   NAS: 192.158.1.12
+   FAITHH Ubuntu: 192.158.1.100
+   FAITHH Windows (Power Amp, SensorBridge gRPC :9999): 192.158.1.101
+   iLO (out-of-band, not used by this gRPC client): 192.158.1.11
+
+1) Get this whole directory onto Gen8 (must contain SensorBridge.proto, client.py, setup_stubs.sh).
+
+   From your Windows dev machine (PowerShell), example:
+
+     scp -r C:\SensorBridge\scripts\gen8_smoke_client jonat@servicebox:~/
+
+   Then on Gen8 you will have ~/gen8_smoke_client/
+
+2) Open a shell on Gen8:
+
+     cd ~/gen8_smoke_client
+     ls -la
+     # You should see SensorBridge.proto, client.py, setup_stubs.sh
+
+3) Python deps (user install is fine):
+
+     python3 -m pip install --user --upgrade grpcio grpcio-tools
+
+4) Generate stubs (always use python3 -m so PATH is not required):
+
+     chmod +x setup_stubs.sh
+     ./setup_stubs.sh
+
+   If you see: env: 'sh\r': No such file or directory
+   the script has Windows (CRLF) line endings. Fix on Gen8 with:
+     sed -i 's/\r$//' setup_stubs.sh
+   then chmod +x setup_stubs.sh && ./setup_stubs.sh again.
+   Or re-copy this folder from a repo that uses .gitattributes (eol=lf for *.sh).
+
+5) Point at your Power Amp VM and run the client.
+
+   Do NOT type angle brackets. Use a real LAN IP, for example:
+
+     export POWER_AMP_HOST=192.158.1.101
+     python3 client.py
+
+   If you omit export, client.py defaults to 192.158.1.101 (FAITHH Windows). Override with export when needed.
+
+6) Common errors
+
+   "No such file or directory" for cd -> you have not copied gen8_smoke_client yet; do step 1.
+
+   "syntax error near unexpected token newline" after export -> you pasted
+   export POWER_AMP_HOST=<power-amp-ip>
+   Bash treats < as redirection. Use a numeric IP (step 5).
+
+   "can't open file .../client.py" -> you ran python3 from ~ instead of cd into gen8_smoke_client first.
+
+7) Windows Power Amp repo (SensorBridge service)
+
+   Legacy JSON shim: SensorBridge/appsettings.json LegacyTcp:Host defaults to 192.158.1.25 (faithh)
+   when LegacyTcp:Enabled is true. The gRPC smoke client on Gen8 always targets Windows at 192.158.1.101.
+
+8) Git EOL on Windows (after pulling .gitattributes)
+
+   If setup_stubs.sh still shows CRLF in your editor, run once from repo root:
+
+     git add --renormalize scripts/gen8_smoke_client/*.sh
+     git status
+
+   Then commit if needed so Git stores LF for *.sh under gen8_smoke_client.

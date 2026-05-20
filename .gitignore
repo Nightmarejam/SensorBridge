@@ -2,3 +2,19 @@ bin/
 obj/
 *.user
 .vs/
+
+# Build output / deployed service (not source)
+service/
+
+# LHM binary distribution (redistributed, not source)
+LHM/
+LHM.zip
+
+# Runtime artifacts
+current_sensors.json
+errors.log
+
+# Legacy/superseded files
+SyncWMI.ps1
+sensors.mof
+sensors_std.mof
