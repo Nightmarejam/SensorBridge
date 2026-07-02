@@ -171,3 +171,21 @@ Other layers (separate work, not in this repo):
 ## License
 
 MIT
+
+## Status (2026-07-02)
+Repurposed: the live goal is **host-to-VM health telemetry** feeding FAITHH's node
+health (see docs/health-telemetry-pivot.md); the anti-cheat-adjacent scope is parked.
+License: MIT.
+
+## The ecosystem (how this repo fits)
+
+| Repo | Role |
+|---|---|
+| [constella-framework](https://github.com/Nightmarejam/constella-framework) | Civic governance framework — also the **logic basis** for everything here (confirmability tiers, concept lineage, Harmony bridge) |
+| [faithh-pet-terminal](https://github.com/Nightmarejam/faithh-pet-terminal) | FAITHH — personal AI companion: Flask + ChromaDB RAG + vLLM on a Proxmox homelab |
+| [SensorBridge](https://github.com/Nightmarejam/SensorBridge) | Host→VM hardware telemetry (gRPC/WMI); pivoted to node-health monitoring feeding FAITHH |
+| [celestial-equilibrium](https://github.com/Nightmarejam/celestial-equilibrium) | Doctrine text (CC BY 4.0), consumed by constella as a submodule |
+| [runbook-to-rule-them-all](https://github.com/Nightmarejam/runbook-to-rule-them-all) | Ops runbooks for the homelab systems |
+| homelab / research-notes / tomcat-sound | Private: hardware+pipeline knowledge, theory notes, business records |
+
+Work is human-directed and AI-assisted — see [PROVENANCE.md](PROVENANCE.md).
